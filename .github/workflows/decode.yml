@@ -1,0 +1,31 @@
+name: decode-images
+on:
+  push:
+    paths:
+      - 'go.txt'
+permissions:
+  contents: write
+jobs:
+  decode:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode bundles
+        run: |
+          python3 - <<'PY'
+          import base64,glob,os
+          n=0
+          for f in sorted(glob.glob('b64/**/*.txt',recursive=True)):
+              for line in open(f):
+                  line=line.strip()
+                  if not line: continue
+                  i,d=line.split(' ',1)
+                  open(i+'.jpg','wb').write(base64.b64decode(d)); n+=1
+          print('decoded',n)
+          PY
+          git rm -rq b64
+          git config user.name github-actions
+          git config user.email actions@users.noreply.github.com
+          git add -A
+          git commit -m "Add blog images"
+          git push
